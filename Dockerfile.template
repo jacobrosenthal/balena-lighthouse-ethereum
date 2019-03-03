@@ -1,0 +1,55 @@
+################################################################################
+# Base image
+################################################################################
+
+FROM balenalib/raspberrypi3-debian:stretch as base
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ENV PARITY_VERSION v2.2.11
+
+################################################################################
+# Rust image
+################################################################################
+
+FROM base as rust
+
+RUN install_packages build-essential curl file git libudev-dev cmake
+
+ENV PATH=/root/.cargo/bin:$PATH
+
+WORKDIR /build
+
+# Install rustup downloading the version specified by the standard rust-toolchain file
+COPY rust-toolchain .
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain `cat rust-toolchain`
+
+################################################################################
+# Dependencies
+################################################################################
+
+FROM rust as builder
+
+WORKDIR /build
+
+RUN git clone https://github.com/paritytech/parity-ethereum && \
+        cd parity-ethereum && \
+        git checkout $PARITY_VERSION
+
+WORKDIR /build/parity-ethereum
+
+# Copy the file specifying the Rust version to use
+COPY rust-toolchain ./
+
+RUN cargo build --release --features final
+
+################################################################################
+# Final image
+################################################################################
+
+FROM base
+
+# Copy binary from builder image
+COPY --from=builder /build/parity-ethereum/target/release/parity /usr/local/parity
+
+CMD ["echo","'No CMD command was set in Dockerfile! Details about CMD command could be found in Dockerfile Guide section in our Docs. Here's the link: https://balena.io/docs"]
