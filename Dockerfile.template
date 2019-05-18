@@ -6,7 +6,7 @@ FROM balenalib/raspberrypi3-debian:stretch as base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ENV PARITY_VERSION v2.2.11
+ENV PARITY_VERSION v2.4.6
 
 ################################################################################
 # Rust image
