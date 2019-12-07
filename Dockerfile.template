@@ -2,11 +2,11 @@
 # Base image
 ################################################################################
 
-FROM balenalib/raspberrypi3-debian:stretch as base
+FROM balenalib/raspberrypi4-64-debian:stretch as base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ENV PARITY_VERSION v2.4.6
+ENV VERSION v0.8.3
 
 ################################################################################
 # Rust image
@@ -16,7 +16,8 @@ FROM base as rust
 
 RUN [ "cross-build-start" ]
 
-RUN install_packages build-essential curl file git libudev-dev cmake
+RUN install_packages build-essential curl file git libudev-dev cmake clang libprotobuf-dev libssl-dev
+
 
 ENV PATH=/root/.cargo/bin:$PATH
 
@@ -38,16 +39,16 @@ RUN [ "cross-build-start" ]
 
 WORKDIR /build
 
-RUN git clone https://github.com/paritytech/parity-ethereum && \
-        cd parity-ethereum && \
-        git checkout $PARITY_VERSION
+RUN git clone https://github.com/sigp/lighthouse && \
+        cd lighthouse && \
+        git checkout $VERSION
 
-WORKDIR /build/parity-ethereum
+WORKDIR /build/lighthouse
 
 # Copy the file specifying the Rust version to use
 COPY rust-toolchain ./
 
-RUN cargo build --release --features final
+RUN cargo build --release --bin lighthouse
 
 RUN [ "cross-build-end" ]
 
@@ -58,6 +59,6 @@ RUN [ "cross-build-end" ]
 FROM base
 
 # Copy binary from builder image
-COPY --from=builder /build/parity-ethereum/target/release/parity /usr/local/parity
+COPY --from=builder /build/lighthouse/target/release/lighthouse /usr/local/lighthouse
 
 CMD ["echo","'No CMD command was set in Dockerfile! Details about CMD command could be found in Dockerfile Guide section in our Docs. Here's the link: https://balena.io/docs"]
