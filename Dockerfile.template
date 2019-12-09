@@ -6,6 +6,7 @@ FROM balenalib/raspberrypi4-64-debian:stretch as base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ENV LIGHTHOUSE_VERSION v0.1.0
 
 ################################################################################
 # Rust image
@@ -38,8 +39,9 @@ RUN [ "cross-build-start" ]
 
 WORKDIR /build
 
-RUN git clone https://github.com/jacobrosenthal/lighthouse --single-branch --branch aarch64 && \
-        cd lighthouse
+RUN git clone https://github.com/sigp/lighthouse && \
+        cd lighthouse && git checkout $LIGHTHOUSE_VERSION && \
+        echo 'leveldb = { git = "https://github.com/jacobrosenthal/leveldb.git", rev = "aarch64" }' >> Cargo.toml
 
 WORKDIR /build/lighthouse
 
