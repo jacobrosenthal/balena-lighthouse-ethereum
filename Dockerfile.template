@@ -2,7 +2,7 @@
 # Base image
 ################################################################################
 
-FROM balenalib/raspberrypi4-64-debian:stretch as base
+FROM balenalib/%%BALENA_MACHINE_NAME%%-stretch as base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -13,8 +13,6 @@ ENV LIGHTHOUSE_VERSION v0.1.0
 ################################################################################
 
 FROM base as rust
-
-RUN [ "cross-build-start" ]
 
 RUN install_packages build-essential curl file git libudev-dev cmake clang libprotobuf-dev libssl-dev pkg-config
 
@@ -27,15 +25,11 @@ WORKDIR /build
 COPY rust-toolchain .
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain `cat rust-toolchain`
 
-RUN [ "cross-build-end" ]
-
 ################################################################################
 # Dependencies
 ################################################################################
 
 FROM rust as builder
-
-RUN [ "cross-build-start" ]
 
 WORKDIR /build
 
@@ -49,8 +43,6 @@ WORKDIR /build/lighthouse
 COPY rust-toolchain ./
 
 RUN cargo build --release --bin lighthouse
-
-RUN [ "cross-build-end" ]
 
 ################################################################################
 # Final image
